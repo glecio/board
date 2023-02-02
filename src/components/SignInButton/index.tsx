@@ -1,6 +1,7 @@
 import styles from './styles.module.scss'
 import {FaGithub} from 'react-icons/fa'
 import {FiX} from 'react-icons/fi'
+import Image from 'next/image'
  
 export function SignInButton() {
 
@@ -12,7 +13,7 @@ export function SignInButton() {
             className={styles.signInButton}
             onClick={ () => {}}
         >
-        <img src="https://sujeitoprogramador.com/steve.png" alt="Steve" />
+        <Image src="/images/steve.png" alt="Steve" width={200} height={200} />
         Olá, Steve
         <FiX color='737380' className={styles.closeIcon} />
         </button>

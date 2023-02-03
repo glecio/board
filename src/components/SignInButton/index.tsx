@@ -7,18 +7,15 @@ import Image from 'next/image'
 export function SignInButton() {
 
     const {data:session} = useSession();
-    if (session != null) {
-        const img = session.user.image
-        console.log(img)
-    } 
+
     return session ?(
         <button 
             type='button'
             className={styles.signInButton}
             onClick={ () => signOut()}
         >
-        <Image src={session.user.image} alt="Steve" width={200} height={200} />
-        Olá, {session.user.name}
+        <Image src={session.session.user.image} alt="Steve" width={200} height={200} />
+        Olá, {session.session.user.name}
         <FiX color='737380' className={styles.closeIcon} />
         </button>
     ) :

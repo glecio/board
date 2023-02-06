@@ -1,21 +1,73 @@
 import { GetServerSideProps } from 'next'
 import { getSession} from 'next-auth/react'
+import {useState, FormEvent} from 'react'
 import Head from 'next/head'
 import { FiCalendar, FiClock, FiEdit2, FiPlus, FiTrash } from 'react-icons/fi'
 import { SupportButton } from '../../components/SupportButton'
 import styles from './styles.module.scss'
 
-export default function Board() {
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, getDocs } from 'firebase/firestore/lite';
+
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+
+
+
+interface BoardProps{
+    user: {
+        id: string,
+        nome: string
+    }
+}
+
+
+export default function Board( { user} : BoardProps) {
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCAdje_IUVl6k1FCeJLqtVxK4eMsAtmmkw",
+        authDomain: "board-app-a9af0.firebaseapp.com",
+        projectId: "board-app-a9af0",
+        storageBucket: "board-app-a9af0.appspot.com",
+        messagingSenderId: "1098795360357",
+        appId: "1:1098795360357:web:c0b9476d2098949fdc268c"
+    };
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const [input, setInput] = useState('')
+
+    async function handleAddTask(e: FormEvent){
+        e.preventDefault()
+        if (input === '') {
+            alert ( 'preencha alguma tarefa')
+        }
+        const docRef = db.collection('tarefas').doc('board-app');
+
+        await docRef.set({
+            created: new Date(),
+            tarefa: input,
+            userId: user.id,
+            nome: user.nome
+        })
+    }
+
     return (
         <>
             <Head>
                 <title>Minhas tarefas - Board</title>
             </Head>
             <main className={styles.container}>
-                <form>
+                <form onSubmit={handleAddTask}>
                     <input 
                         type="text" 
                         placeholder='Digite a tarefa...'
+                        value={input}
+                        onChange={ (e) => setInput(e.target.value)}
                     />
                     <button type='submit'>
                         <FiPlus size={25} color="#17181f" />
@@ -74,9 +126,15 @@ export const getServerSideProps: GetServerSideProps = async({ req }) =>{
         }
     }
 
-    return {
-        props:{
+   
+    const user = {
+        nome: session?.session.user.name ,
+        id: session?.id
+    }
 
+    return {
+            props:{
+                user
         }
     }
 }

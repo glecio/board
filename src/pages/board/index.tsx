@@ -6,14 +6,8 @@ import { FiCalendar, FiClock, FiEdit2, FiPlus, FiTrash } from 'react-icons/fi'
 import { SupportButton } from '../../components/SupportButton'
 import styles from './styles.module.scss'
 
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs } from 'firebase/firestore/lite';
-
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-
+import {db, firebaseApp} from '../../services/firebaseConnection'
+import { addDoc, collection, doc, setDoc } from 'firebase/firestore'
 
 
 interface BoardProps{
@@ -23,22 +17,8 @@ interface BoardProps{
     }
 }
 
-
 export default function Board( { user} : BoardProps) {
-
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-        apiKey: "AIzaSyCAdje_IUVl6k1FCeJLqtVxK4eMsAtmmkw",
-        authDomain: "board-app-a9af0.firebaseapp.com",
-        projectId: "board-app-a9af0",
-        storageBucket: "board-app-a9af0.appspot.com",
-        messagingSenderId: "1098795360357",
-        appId: "1:1098795360357:web:c0b9476d2098949fdc268c"
-    };
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
+  
     const [input, setInput] = useState('')
 
     async function handleAddTask(e: FormEvent){
@@ -46,14 +26,27 @@ export default function Board( { user} : BoardProps) {
         if (input === '') {
             alert ( 'preencha alguma tarefa')
         }
-        const docRef = db.collection('tarefas').doc('board-app');
 
-        await docRef.set({
-            created: new Date(),
-            tarefa: input,
+        const data = {
+            created_at: new Date(),
+            task: input,
             userId: user.id,
-            nome: user.nome
+            name: user.nome
+        }
+
+        const docRef = collection(db, 'tasks')
+
+        const res = await addDoc(docRef, data).
+        then((doc) => {
+            console.log('cadastrado com sucesso')
         })
+        .catch((err)=>{
+            console.log('Erro ao cadastrar: ', err)
+        }
+
+        )
+                   
+       
     }
 
     return (

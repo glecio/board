@@ -5,9 +5,10 @@ import Head from 'next/head'
 import { FiCalendar, FiClock, FiEdit2, FiPlus, FiTrash } from 'react-icons/fi'
 import { SupportButton } from '../../components/SupportButton'
 import styles from './styles.module.scss'
-
 import {db, firebaseApp} from '../../services/firebaseConnection'
-import { addDoc, collection, doc, setDoc } from 'firebase/firestore'
+import { addDoc, collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
+import {format} from 'date-fns'
+import Link from 'next/link'
 
 
 interface BoardProps{
@@ -20,6 +21,7 @@ interface BoardProps{
 export default function Board( { user} : BoardProps) {
   
     const [input, setInput] = useState('')
+    const [taskList, setTasklist] = useState([])
 
     async function handleAddTask(e: FormEvent){
         e.preventDefault()
@@ -33,12 +35,21 @@ export default function Board( { user} : BoardProps) {
             userId: user.id,
             name: user.nome
         }
-
         const docRef = collection(db, 'tasks')
-
-        const res = await addDoc(docRef, data).
-        then((doc) => {
-            console.log('cadastrado com sucesso')
+        const res = await addDoc(docRef, data)
+        .then((doc) => {
+            console.log('cadastrado com sucesso:', doc)
+            let dataStored = {
+                id: doc.id,
+                created: new Date(),
+                createdFormated: format(new Date(), 'dd MMMM yyyy'),
+                tarefa: input,
+                userId: user.id,
+                nome: user.nome
+            }
+            setTasklist([...taskList, dataStored])
+            console.log(taskList)
+            setInput('')
         })
         .catch((err)=>{
             console.log('Erro ao cadastrar: ', err)
@@ -70,26 +81,30 @@ export default function Board( { user} : BoardProps) {
                 <h1>Você tem 2 tarefas!</h1>
 
                 <section>
-                    <article className={styles.taskList}>
-                        <p>Aprender a criar projetos usando NextJS e aplicando firebase como backend</p>
-                        <div className={styles.actions}>
-                            <div>
-                                <div>   
-                                    <FiCalendar size={20} color="#ffb800" />
-                                    <time>17 julho 2021</time>
+                    {taskList.map( task => (
+                        <article className={styles.taskList} key={task.id}>
+                            <Link href={`board/${task.id}`}>
+                                <p>{task.tarefa}</p>
+                            </Link>
+                            <div className={styles.actions}>
+                                <div>
+                                    <div>   
+                                        <FiCalendar size={20} color="#ffb800" />
+                                        <time>{task.createdFormated}</time>
+                                    </div>
+                                    <button>
+                                        <FiEdit2 size={20} color="#fff" />
+                                        <span>Editar</span>
+                                    </button>
                                 </div>
                                 <button>
-                                    <FiEdit2 size={20} color="#fff" />
-                                    <span>Editar</span>
+                                    <FiTrash size={20} color="#ff3636"/>
+                                    <span>Excluir</span>
                                 </button>
-                            </div>
-                            <button>
-                                <FiTrash size={20} color="#ff3636"/>
-                                <span>Excluir</span>
-                            </button>
 
-                        </div>
-                    </article>
+                            </div>
+                        </article>     
+                    ))}
                 </section>
             </main>
             <div className={styles.vipContainer}>
@@ -119,7 +134,15 @@ export const getServerSideProps: GetServerSideProps = async({ req }) =>{
         }
     }
 
-   
+    const docRef = collection(db, 'tasks')
+    const tasks = await getDocs(docRef)
+    const data = tasks.docs.map( u => {
+        return {
+            id: u.id,
+        }
+        console.log(u)
+    })
+
     const user = {
         nome: session?.session.user.name ,
         id: session?.id

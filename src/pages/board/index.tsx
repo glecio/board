@@ -10,6 +10,14 @@ import { addDoc, collection, doc, getDoc, getDocs, setDoc } from 'firebase/fires
 import {format} from 'date-fns'
 import Link from 'next/link'
 
+type TaskList = {
+    id: string
+    created: string | Date
+    createdFormated? : string
+    tarefa: string
+    userId: string
+    nome: string
+}
 
 interface BoardProps{
     user: {
@@ -18,10 +26,10 @@ interface BoardProps{
     }
 }
 
-export default function Board( { user} : BoardProps) {
+export default function Board( { user, data} : BoardProps) {
   
     const [input, setInput] = useState('')
-    const [taskList, setTasklist] = useState([])
+    const [taskList, setTasklist] = useState<TaskList[]>(JSON.parse(data))
 
     async function handleAddTask(e: FormEvent){
         e.preventDefault()
@@ -78,13 +86,13 @@ export default function Board( { user} : BoardProps) {
                     </button>
 
                 </form>
-                <h1>Você tem 2 tarefas!</h1>
+                <h1>Você tem {taskList.length} tarefa{taskList.length === 1? '': 's'}!</h1>
 
                 <section>
                     {taskList.map( task => (
                         <article className={styles.taskList} key={task.id}>
                             <Link href={`board/${task.id}`}>
-                                <p>{task.tarefa}</p>
+                                <p>{task.task}</p>
                             </Link>
                             <div className={styles.actions}>
                                 <div>
@@ -136,13 +144,15 @@ export const getServerSideProps: GetServerSideProps = async({ req }) =>{
 
     const docRef = collection(db, 'tasks')
     const tasks = await getDocs(docRef)
-    const data = tasks.docs.map( u => {
+    const data = JSON.stringify(tasks.docs.map( u => {
         return {
             id: u.id,
+            createdFormated: format(u.data().created_at.toDate(), 'dd MMMM yyyy'),
+            ...u.data()
         }
-        console.log(u)
-    })
-
+       
+    }))
+    console.log(data)
     const user = {
         nome: session?.session.user.name ,
         id: session?.id
@@ -150,7 +160,8 @@ export const getServerSideProps: GetServerSideProps = async({ req }) =>{
 
     return {
             props:{
-                user
+                user,
+                data
         }
     }
 }

@@ -6,7 +6,7 @@ import { FiCalendar, FiClock, FiEdit2, FiPlus, FiTrash } from 'react-icons/fi'
 import { SupportButton } from '../../components/SupportButton'
 import styles from './styles.module.scss'
 import {db, firebaseApp} from '../../services/firebaseConnection'
-import { addDoc, collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
+import { addDoc, collection, doc, getDoc, getDocs, setDoc, query, where, orderBy, deleteDoc } from 'firebase/firestore'
 import {format} from 'date-fns'
 import Link from 'next/link'
 
@@ -56,17 +56,32 @@ export default function Board( { user, data} : BoardProps) {
                 nome: user.nome
             }
             setTasklist([...taskList, dataStored])
-            console.log(taskList)
             setInput('')
         })
         .catch((err)=>{
             console.log('Erro ao cadastrar: ', err)
-        }
+        })
+    }
 
-        )
-                   
+    async function handleDelete(id: string){
+        const docRef = doc(db, 'tasks', id)
+        await deleteDoc(docRef)
+        .then(()=>{
+            console.log('deletado com sucesso')
+            let taskDeleted = taskList.filter(
+                item => { 
+                    return (item.id != id) 
+                })
+                setTasklist(taskDeleted)
+        })
+        .catch((err)=>{
+            console.log(err)
+        })
+
+        
        
     }
+    
 
     return (
         <>
@@ -105,7 +120,7 @@ export default function Board( { user, data} : BoardProps) {
                                         <span>Editar</span>
                                     </button>
                                 </div>
-                                <button>
+                                <button onClick={()=>handleDelete(task.id)}>
                                     <FiTrash size={20} color="#ff3636"/>
                                     <span>Excluir</span>
                                 </button>
@@ -143,7 +158,8 @@ export const getServerSideProps: GetServerSideProps = async({ req }) =>{
     }
 
     const docRef = collection(db, 'tasks')
-    const tasks = await getDocs(docRef)
+    const q = query(docRef, where('userId', '==',  session.id), orderBy("created_at", "desc"))
+    const tasks = await getDocs(q)
     const data = JSON.stringify(tasks.docs.map( u => {
         return {
             id: u.id,
@@ -152,7 +168,7 @@ export const getServerSideProps: GetServerSideProps = async({ req }) =>{
         }
        
     }))
-    console.log(data)
+
     const user = {
         nome: session?.session.user.name ,
         id: session?.id

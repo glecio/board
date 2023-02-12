@@ -18,6 +18,5 @@ const db = getFirestore(firebaseApp);
  
 export {firebaseApp, db}
 
-console.log(db)
 
 

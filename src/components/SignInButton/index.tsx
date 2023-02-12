@@ -28,5 +28,7 @@ export function SignInButton() {
             <FaGithub color='FFB800'/>
             Entrar com Github
         </button>
-    )
+        
+    );
+  
 }

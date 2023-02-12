@@ -61,7 +61,7 @@ export default function Board( { user, data} : BoardProps) {
             created_at: new Date(),
             tarefa: input,
             userId: user.id,
-            name: user.nome
+            nome: user.nome
         }
         const docRef = collection(db, 'tasks')
         const res = await addDoc(docRef, data)

@@ -2,11 +2,11 @@ import { GetServerSideProps } from 'next'
 import { getSession} from 'next-auth/react'
 import {useState, FormEvent} from 'react'
 import Head from 'next/head'
-import { FiCalendar, FiClock, FiEdit2, FiPlus, FiTrash } from 'react-icons/fi'
+import { FiCalendar, FiClock, FiEdit2, FiPlus, FiTrash, FiX } from 'react-icons/fi'
 import { SupportButton } from '../../components/SupportButton'
 import styles from './styles.module.scss'
 import {db, firebaseApp} from '../../services/firebaseConnection'
-import { addDoc, collection, doc, getDoc, getDocs, setDoc, query, where, orderBy, deleteDoc } from 'firebase/firestore'
+import { addDoc, collection, doc, getDoc, getDocs, setDoc, query, where, orderBy, deleteDoc, updateDoc } from 'firebase/firestore'
 import {format} from 'date-fns'
 import Link from 'next/link'
 
@@ -24,22 +24,42 @@ interface BoardProps{
         id: string,
         nome: string
     }
+    data: string
 }
 
 export default function Board( { user, data} : BoardProps) {
   
     const [input, setInput] = useState('')
-    const [taskList, setTasklist] = useState<TaskList[]>(JSON.parse(data))
+    const [taskList, setTaskList] = useState<TaskList[]>(JSON.parse(data))
 
+    const [taskEdit, setTaskEdit] = useState<TaskList | null>(null)
+
+    //CRIAÇÃO DE TAREFAS
     async function handleAddTask(e: FormEvent){
         e.preventDefault()
         if (input === '') {
             alert ( 'preencha alguma tarefa')
         }
 
+        if (taskEdit){
+            const docRef = doc(db, 'tasks', taskEdit.id)
+            await updateDoc(docRef,{
+                tarefa: input
+            }).then(() => {
+                let data = taskList
+                let taskIndex = taskList.findIndex( item => item.id === taskEdit.id)
+                data[taskIndex].tarefa = input
+                setTaskList(data)
+                setTaskEdit(null)
+                setInput('')
+            })
+
+            return
+        }
+
         const data = {
             created_at: new Date(),
-            task: input,
+            tarefa: input,
             userId: user.id,
             name: user.nome
         }
@@ -55,7 +75,7 @@ export default function Board( { user, data} : BoardProps) {
                 userId: user.id,
                 nome: user.nome
             }
-            setTasklist([...taskList, dataStored])
+            setTaskList([...taskList, dataStored])
             setInput('')
         })
         .catch((err)=>{
@@ -63,6 +83,7 @@ export default function Board( { user, data} : BoardProps) {
         })
     }
 
+    // EXCLUSÃO DE TAREFAS
     async function handleDelete(id: string){
         const docRef = doc(db, 'tasks', id)
         await deleteDoc(docRef)
@@ -72,7 +93,7 @@ export default function Board( { user, data} : BoardProps) {
                 item => { 
                     return (item.id != id) 
                 })
-                setTasklist(taskDeleted)
+                setTaskList(taskDeleted)
         })
         .catch((err)=>{
             console.log(err)
@@ -82,6 +103,15 @@ export default function Board( { user, data} : BoardProps) {
        
     }
     
+    function handleEdit(task: TaskList) {
+        setTaskEdit(task)
+        setInput(task.tarefa)
+    }
+
+    function handleCancelEdit(){
+        setInput('')
+        setTaskEdit(null)
+    }
 
     return (
         <>
@@ -89,6 +119,14 @@ export default function Board( { user, data} : BoardProps) {
                 <title>Minhas tarefas - Board</title>
             </Head>
             <main className={styles.container}>
+                {taskEdit && (
+                    <span className={styles.warnText}>
+                        <button onClick={()=>handleCancelEdit()}>
+                            <FiX size={30} color='#ff3636'/>
+                        </button>
+                        Você está editando a tarefa!
+                    </span>
+                )}
                 <form onSubmit={handleAddTask}>
                     <input 
                         type="text" 
@@ -107,7 +145,7 @@ export default function Board( { user, data} : BoardProps) {
                     {taskList.map( task => (
                         <article className={styles.taskList} key={task.id}>
                             <Link href={`board/${task.id}`}>
-                                <p>{task.task}</p>
+                                <p>{task.tarefa}</p>
                             </Link>
                             <div className={styles.actions}>
                                 <div>
@@ -115,12 +153,12 @@ export default function Board( { user, data} : BoardProps) {
                                         <FiCalendar size={20} color="#ffb800" />
                                         <time>{task.createdFormated}</time>
                                     </div>
-                                    <button>
+                                    <button onClick={() => handleEdit(task)}>
                                         <FiEdit2 size={20} color="#fff" />
                                         <span>Editar</span>
                                     </button>
                                 </div>
-                                <button onClick={()=>handleDelete(task.id)}>
+                                <button onClick={() => handleDelete(task.id)}>
                                     <FiTrash size={20} color="#ff3636"/>
                                     <span>Excluir</span>
                                 </button>

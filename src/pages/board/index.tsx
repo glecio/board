@@ -36,6 +36,7 @@ export default function Board( { user, data} : BoardProps) {
 
     //CRIAÇÃO DE TAREFAS
     async function handleAddTask(e: FormEvent){
+        let inputField = document.getElementById('taskInput')
         e.preventDefault()
         if (input === '') {
             alert ( 'preencha alguma tarefa')
@@ -53,7 +54,7 @@ export default function Board( { user, data} : BoardProps) {
                 setTaskEdit(null)
                 setInput('')
             })
-
+            inputField.focus()
             return
         }
 
@@ -75,12 +76,14 @@ export default function Board( { user, data} : BoardProps) {
                 userId: user.id,
                 nome: user.nome
             }
-            setTaskList([...taskList, dataStored])
+            setTaskList([dataStored, ...taskList])
             setInput('')
         })
         .catch((err)=>{
             console.log('Erro ao cadastrar: ', err)
         })
+        inputField.focus()
+       
     }
 
     // EXCLUSÃO DE TAREFAS
@@ -129,7 +132,8 @@ export default function Board( { user, data} : BoardProps) {
                 )}
                 <form onSubmit={handleAddTask}>
                     <input 
-                        type="text" 
+                        type="text"
+                        id="taskInput" 
                         placeholder='Digite a tarefa...'
                         value={input}
                         onChange={ (e) => setInput(e.target.value)}

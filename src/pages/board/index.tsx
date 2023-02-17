@@ -10,11 +10,20 @@ import { addDoc, collection, doc, getDoc, getDocs, setDoc, query, where, orderBy
 import {format} from 'date-fns'
 import Link from 'next/link'
 
-type TaskList = {
+
+type Item = {
+    item: string,
+    valor: number,
+    quantidade: number
+}
+
+type ItemsList = {
+    veiculo: string
     id: string
+    cliente: string
     created: string | Date
     createdFormated? : string
-    tarefa: string
+    items: (Item)[] 
     userId: string
     nome: string
 }
@@ -30,27 +39,28 @@ interface BoardProps{
 export default function Board( { user, data} : BoardProps) {
   
     const [input, setInput] = useState('')
-    const [taskList, setTaskList] = useState<TaskList[]>(JSON.parse(data))
+    /* lista de orcamentos*/
+    const [itemsList, setItemsList] = useState<ItemsList[]>(JSON.parse(data))
 
-    const [taskEdit, setTaskEdit] = useState<TaskList | null>(null)
+    const [taskEdit, setTaskEdit] = useState<ItemsList | null>(null)
 
     //CRIAÇÃO DE TAREFAS
     async function handleAddTask(e: FormEvent){
-        let inputField = document.getElementById('taskInput')
         e.preventDefault()
         if (input === '') {
             alert ( 'preencha alguma tarefa')
         }
 
+/*
         if (taskEdit){
             const docRef = doc(db, 'tasks', taskEdit.id)
             await updateDoc(docRef,{
                 tarefa: input
             }).then(() => {
-                let data = taskList
-                let taskIndex = taskList.findIndex( item => item.id === taskEdit.id)
-                data[taskIndex].tarefa = input
-                setTaskList(data)
+                let data = itemsList
+                let taskIndex = itemsList.findIndex( item => item.id === taskEdit.id)
+                data[taskIndex].orcamento = input
+                setItemsList(data)
                 setTaskEdit(null)
                 setInput('')
             })
@@ -76,14 +86,15 @@ export default function Board( { user, data} : BoardProps) {
                 userId: user.id,
                 nome: user.nome
             }
-            setTaskList([dataStored, ...taskList])
+            setItemsList([dataStored, ...itemsList])
             setInput('')
         })
         .catch((err)=>{
             console.log('Erro ao cadastrar: ', err)
         })
         inputField.focus()
-       
+       */
+
     }
 
     // EXCLUSÃO DE TAREFAS
@@ -92,11 +103,11 @@ export default function Board( { user, data} : BoardProps) {
         await deleteDoc(docRef)
         .then(()=>{
             console.log('deletado com sucesso')
-            let taskDeleted = taskList.filter(
+            let taskDeleted = itemsList.filter(
                 item => { 
                     return (item.id != id) 
                 })
-                setTaskList(taskDeleted)
+                setItemsList(taskDeleted)
         })
         .catch((err)=>{
             console.log(err)
@@ -106,14 +117,14 @@ export default function Board( { user, data} : BoardProps) {
        
     }
     
-    function handleEdit(task: TaskList) {
-        setTaskEdit(task)
-        setInput(task.tarefa)
+    function handleEdit(orcamento: ItemsList) {
+        setTaskEdit(orcamento)
+       // setInput(orcamento.items)
     }
 
     function handleCancelEdit(){
         setInput('')
-        setTaskEdit(null)
+      //  setTaskEdit(null)
     }
 
     return (
@@ -121,66 +132,22 @@ export default function Board( { user, data} : BoardProps) {
             <Head>
                 <title>Minhas tarefas - Board</title>
             </Head>
-            <main className={styles.container}>
-                {taskEdit && (
-                    <span className={styles.warnText}>
-                        <button onClick={()=>handleCancelEdit()}>
-                            <FiX size={30} color='#ff3636'/>
-                        </button>
-                        Você está editando a tarefa!
-                    </span>
-                )}
-                <form onSubmit={handleAddTask}>
-                    <input 
-                        type="text"
-                        id="taskInput" 
-                        placeholder='Digite a tarefa...'
-                        value={input}
-                        onChange={ (e) => setInput(e.target.value)}
-                    />
-                    <button type='submit'>
-                        <FiPlus size={25} color="#17181f" />
-                    </button>
-
-                </form>
-                <h1>Você tem {taskList.length} tarefa{taskList.length === 1? '': 's'}!</h1>
+            <main >
+                
+                <h1>Você tem {itemsList.length} orcamento{itemsList.length === 1? '': 's'}!</h1>
 
                 <section>
-                    {taskList.map( task => (
-                        <article className={styles.taskList} key={task.id}>
-                            <Link href={`board/${task.id}`}>
-                                <p>{task.tarefa}</p>
-                            </Link>
-                            <div className={styles.actions}>
-                                <div>
-                                    <div>   
-                                        <FiCalendar size={20} color="#ffb800" />
-                                        <time>{task.createdFormated}</time>
-                                    </div>
-                                    <button onClick={() => handleEdit(task)}>
-                                        <FiEdit2 size={20} color="#fff" />
-                                        <span>Editar</span>
-                                    </button>
-                                </div>
-                                <button onClick={() => handleDelete(task.id)}>
-                                    <FiTrash size={20} color="#ff3636"/>
-                                    <span>Excluir</span>
-                                </button>
-
-                            </div>
+                    {itemsList.map( orcamento => (
+                        <article className={styles.itemsList} key={orcamento.id}>
+                            <h2>{orcamento.cliente} - {orcamento.veiculo}</h2>
+                                    {orcamento.items.map( (peca, index) => (
+                                        <p key={index}> {peca.item} - {peca.quantidade} - {peca.valor}</p>
+                                    ))}
                         </article>     
                     ))}
                 </section>
             </main>
-            <div className={styles.vipContainer}>
-                <h3>Obrigado por apoiar esse projeto.</h3>
-                <div>
-                    <FiClock size={28} color="#fff"/>
-                    <time>
-                        Última doação foi a 3 dias.
-                    </time>
-                </div>
-            </div>
+           
             <SupportButton/>
         
         </>
@@ -199,10 +166,10 @@ export const getServerSideProps: GetServerSideProps = async({ req }) =>{
         }
     }
 
-    const docRef = collection(db, 'tasks')
+    const docRef = collection(db, 'orcamentos')
     const q = query(docRef, where('userId', '==',  session.id), orderBy("created_at", "desc"))
-    const tasks = await getDocs(q)
-    const data = JSON.stringify(tasks.docs.map( u => {
+    const orcamentos = await getDocs(q)
+    const data = JSON.stringify(orcamentos.docs.map( u => {
         return {
             id: u.id,
             createdFormated: format(u.data().created_at.toDate(), 'dd MMMM yyyy'),
@@ -210,7 +177,7 @@ export const getServerSideProps: GetServerSideProps = async({ req }) =>{
         }
        
     }))
-
+    console.log(data)
     const user = {
         nome: session?.session.user.name ,
         id: session?.id

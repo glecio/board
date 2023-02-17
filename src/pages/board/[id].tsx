@@ -4,15 +4,23 @@ import { doc, getDoc, query, where } from 'firebase/firestore'
 import { db } from "../../services/firebaseConnection"
 import format from "date-fns/format"
 
-type Task = {
+type Item = {
+    nome: string,
+    valor: number,
+    quantidade: number
+}
+
+
+type Orcamento = {
     id: string,
     created: string | Date,
     createdFormated?: string,
-    tarefa: string,
+    items: []
     userId: string,
     nome: string
 }
 
+/* Passa os Json para a página de detalhes */
 interface TaskListProps {
     data: string
 }
@@ -40,13 +48,13 @@ export const getServerSideProps: GetServerSideProps = async ({ req, params }) =>
         }
     }
     
-    const docRef = doc(db, 'tasks', String(id))
+    const docRef = doc(db, 'orcamentos', String(id))
     const data = await getDoc(docRef).then((snapshot) => {
         const data = {
             id: snapshot.id,
             created: snapshot.data().created_at,
             createdFormated: format(snapshot.data().created_at.toDate(), 'dd MMMM yyyy'),
-            tarefa: snapshot.data().tarefa,
+            items: snapshot.data().items,
             userId: snapshot.data().userId,
             nome: snapshot.data().nome
         }

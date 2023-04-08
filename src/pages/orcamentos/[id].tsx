@@ -15,7 +15,7 @@ type Orcamento = {
     id: string,
     created: string | Date,
     createdFormated?: string,
-    items: []
+    items: Item[]
     userId: string,
     nome: string
 }

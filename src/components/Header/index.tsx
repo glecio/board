@@ -11,7 +11,9 @@ export function Header() {
                 </Link>
                 <nav>
                     <Link href="/">Home</Link>
-                    <Link href="/board">Meu  Board</Link>
+                    <Link href="/orcamentos">Meus orçamentos</Link>
+                    <Link href="/pecas">Peças</Link>
+
                 </nav>
                 <SignInButton/>
             </div>

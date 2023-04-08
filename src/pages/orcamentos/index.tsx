@@ -17,7 +17,7 @@ type Item = {
     quantidade: number
 }
 
-type ItemsList = {
+type Orcamento = {
     veiculo: string
     id: string
     cliente: string
@@ -40,9 +40,7 @@ export default function Board( { user, data} : BoardProps) {
   
     const [input, setInput] = useState('')
     /* lista de orcamentos*/
-    const [itemsList, setItemsList] = useState<ItemsList[]>(JSON.parse(data))
-
-    const [taskEdit, setTaskEdit] = useState<ItemsList | null>(null)
+    const [itemsList, setItemsList] = useState<Orcamento[]>(JSON.parse(data))
 
     //CRIAÇÃO DE TAREFAS
     async function handleAddTask(e: FormEvent){
@@ -117,7 +115,7 @@ export default function Board( { user, data} : BoardProps) {
        
     }
     
-    function handleEdit(orcamento: ItemsList) {
+    function handleEdit(orcamento: Orcamento) {
         setTaskEdit(orcamento)
        // setInput(orcamento.items)
     }
@@ -130,7 +128,7 @@ export default function Board( { user, data} : BoardProps) {
     return (
         <>
             <Head>
-                <title>Minhas tarefas - Board</title>
+                <title>Meus Orçamentos - Oficina</title>
             </Head>
             <main >
                 
